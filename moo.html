@@ -1,0 +1,93 @@
+<script src="jquery.js"></script>
+<script src="underscore.js"></script>
+<script src="backbone.js"></script>
+
+<script>
+window.JellyBean = Backbone.Model.extend({
+    defaults: {
+        "color": "yellow",
+        "flavor": "banana"
+    },
+
+    triggerCustomJellyEvent: function(rainbows) {
+        // You can pass lotso things when you trigger events
+        this.trigger("custom-jelly-bean-event", rainbows);
+    }
+});
+
+window.JellyBeanView = Backbone.View.extend({
+    // When the user clicks on the view's elements matching .jelly-color,
+    // _onJellyColorClick is called.
+    events: {
+        "click .jelly-color": "_onJellyColorClick"
+    },
+
+    initialize: function(options) {
+        Backbone.View.prototype.initialize.call(this, options);
+        // Listen to any model change.
+        // Or if you only care about the color attribute, you could listen to
+        // "change:color". This comes for free with Backbone.
+        this.model.on("change", this.render, this);
+
+        // You can also trigger custom events and pass parameters as you wish
+        this.model.on("custom-jelly-bean-event", this._onCustomTrigger, this);
+
+    },
+
+    render: function() {
+        var color = this.model.get("color"),
+            flavor = this.model.get("flavor");
+
+        // In real KA development, we typically use Handlebars templates here
+        // and pass this.model.toJSON() as the context.
+
+        // Instead of doing $(".jelly-color")..., we stay within the view's
+        // scope by doing this.$el.find(".jelly-color"). This matters when you
+        // might have multiple jelly bean views and you only want to affect
+        // one of them.
+        this.$el
+            .find(".jelly-color")
+                .html(color)
+            .end()
+            .find(".jelly-flavor")
+                .html(flavor);
+
+        return this;
+    },
+
+    _onCustomTrigger: function(rainbows) {
+        // Rainbows!
+        console.log("custom jelly bean event was triggered with: " + rainbows);
+    },
+
+    _onJellyColorClick: function(e) {
+        alert("peanut butter jelly time!")
+    }
+});
+
+
+$(function() {
+    // Play around in the console!
+    // - jelly.triggerCustomJellyEvent("mooMoomooo") and see the output
+    // - jelly.set({color: "red"}) and see the view automatically update
+    window.jelly = new JellyBean();
+
+    // You can pass extra things in to the constructor, but some have a special
+    // meaning in Backbone. Here we make use of Backbone's automatic
+    // shenanigans with model and el. This is what lets our view do this.model
+    // and this.$el.html() without catastrophic repercussions.
+    window.jellyView = new JellyBeanView({
+        model: jelly,
+        el: $("#jelly-bean-container")
+    });
+    jellyView.render();
+});
+</script>
+<html>
+<body>
+    <div id="jelly-bean-container">
+        this <span class="jelly-color"></span> jelly bean tastes like
+        <span class="jelly-flavor"></span>
+    </div>
+</body>
+</html>
